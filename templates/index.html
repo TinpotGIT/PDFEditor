@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>PDF Editor</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #333;
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            color: white;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            text-decoration: none;
+        }
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+        .content-wrapper {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .sidebar-left, .sidebar-right {
+            width: 300px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            height: 100%;
+            overflow-y: auto;
+        }
+        .sidebar-right {
+            background-color: #f9f9f9;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            position: relative;
+        }
+        h2 {
+            color: #333;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        input[type="submit"], button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        input[type="submit"]:hover, button:hover {
+            background-color: #45a049;
+        }
+        #pdfViewer {
+            border: 1px solid #ddd;
+            width: 100%;
+            height: calc(100% - 50px);
+        }
+        .refresh-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .download-container {
+            text-align: center;
+        }
+        .download-input {
+            width: calc(100% - 40px);
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .download-btn {
+            display: block;
+            width: calc(100% - 40px);
+            height: 60px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PDF Editor</h1>
+        <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+    </div>
+    
+    <div class="content-wrapper">
+        <div class="sidebar-left">
+            <h2>Blank PDF Creation</h2>
+            <form method="POST" action="/generate-pdf">
+                <label for="lname">PDF Name:</label><br>
+                <input type="text" id="lname" name="lname" value=""><br><br>
+                <input type="submit" value="Create PDF">
+            </form>
+
+            <h2>Upload PDF File</h2>
+            <form action="/success" method="post" enctype="multipart/form-data">   
+                <input type="file" name="file" /><br><br>   
+                <input type="submit" value="Upload">   
+            </form>
+        </div>
+
+        <div class="main-content">
+            <iframe id="pdfViewer" src="{{ url_for('serve_pdf') }}"></iframe>
+            <button class="refresh-btn" onclick="refreshPDF()">Refresh PDF</button>
+        </div>
+
+        <div class="sidebar-right">
+            <h2>Adding Text Pages</h2>
+            <form method="POST" action="/pagepdf">
+                <label for="pagetext">Text:</label><br>
+                <textarea id="pagetext" name="pagetext" rows="10" cols="30"></textarea><br><br>
+                <input type="submit" value="Add">
+            </form>
+
+            <h2>Image Uploader</h2>
+            <form action="/upload-image" method="post" enctype="multipart/form-data">
+                <input type="file" name="image" accept="image/*" /><br><br>
+                <button type="submit">Upload</button>
+            </form>
+
+            <div class="download-container">
+                <input type="text" id="filename" class="download-input" placeholder="Enter filename for download"/>
+                <form action="/download-pdf" method="GET">
+                    <button type="submit" class="download-btn">Download PDF</button>
+                    <input type="hidden" name="filename" id="hidden-filename"/>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function refreshPDF() {
+            document.getElementById('pdfViewer').src = "{{ url_for('serve_pdf') }}?" + new Date().getTime();
+        }
+
+        document.querySelector('.download-btn').addEventListener('click', function() {
+            const filenameInput = document.getElementById('filename');
+            document.getElementById('hidden-filename').value = filenameInput.value || 'SAVED_FILE';
+        });
+    </script>
+</body>
+</html>
